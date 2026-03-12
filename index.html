@@ -4,633 +4,909 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="refresh" content="30">
-<title>MEDIA OFFICE — Virtual Office</title>
+<title>MEDIA OFFICE — Command Center</title>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
     
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     :root {
-        --gold: #c8a84e;
+        --gold: #d4a843;
+        --gold-bright: #f0c95a;
         --gold-dim: #8a7235;
-        --bg: #0a0a0a;
-        --bg2: #111111;
-        --bg3: #1a1a1a;
-        --text: #e0e0e0;
-        --text-dim: #666;
-        --green: #4caf50;
-        --yellow: #f5a623;
-        --red: #f44336;
-        --blue: #2196f3;
+        --gold-glow: rgba(212,168,67,0.15);
+        --bg: #050508;
+        --bg2: #0c0c12;
+        --bg3: #13131d;
+        --bg4: #1a1a28;
+        --border: rgba(212,168,67,0.12);
+        --border-active: rgba(212,168,67,0.4);
+        --text: #e8e8f0;
+        --text-mid: #9090a8;
+        --text-dim: #55556a;
+        --green: #34d399;
+        --green-dim: rgba(52,211,153,0.12);
+        --yellow: #fbbf24;
+        --yellow-dim: rgba(251,191,36,0.12);
+        --red: #f87171;
+        --red-dim: rgba(248,113,113,0.12);
+        --blue: #60a5fa;
+        --blue-dim: rgba(96,165,250,0.12);
+        --purple: #a78bfa;
     }
     
-    body {
+    html, body {
         background: var(--bg);
         color: var(--text);
-        font-family: 'Inter', system-ui, sans-serif;
-        overflow: hidden;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
         height: 100vh;
+        overflow: hidden;
+        -webkit-font-smoothing: antialiased;
     }
     
-    /* Animated background grid */
-    .bg-grid {
+    /* === BACKGROUND EFFECTS === */
+    .bg-noise {
         position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
+        inset: 0;
+        opacity: 0.03;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        z-index: 0;
+    }
+    
+    .bg-gradient {
+        position: fixed;
+        inset: 0;
+        background: 
+            radial-gradient(ellipse 80% 60% at 50% 0%, rgba(212,168,67,0.04) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 50% at 0% 50%, rgba(96,165,250,0.02) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 50% at 100% 80%, rgba(167,139,250,0.02) 0%, transparent 50%);
+        z-index: 0;
+    }
+    
+    .grid-overlay {
+        position: fixed;
+        inset: 0;
         background-image: 
-            linear-gradient(rgba(200,168,78,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(200,168,78,0.03) 1px, transparent 1px);
-        background-size: 50px 50px;
-        animation: gridMove 20s linear infinite;
+            linear-gradient(rgba(212,168,67,0.02) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(212,168,67,0.02) 1px, transparent 1px);
+        background-size: 60px 60px;
         z-index: 0;
     }
     
-    @keyframes gridMove {
-        0% { transform: translate(0, 0); }
-        100% { transform: translate(50px, 50px); }
-    }
-    
-    /* Floating particles */
-    .particle {
+    .scan-line {
         position: fixed;
-        width: 2px; height: 2px;
-        background: var(--gold);
-        border-radius: 50%;
-        opacity: 0;
-        animation: float 8s ease-in-out infinite;
+        left: 0;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent 10%, var(--gold) 50%, transparent 90%);
+        opacity: 0.08;
+        animation: scan 12s linear infinite;
         z-index: 0;
     }
+    @keyframes scan { 0% { top: -2px; } 100% { top: 100vh; } }
     
-    @keyframes float {
-        0% { opacity: 0; transform: translateY(100vh) scale(0); }
-        50% { opacity: 0.6; }
-        100% { opacity: 0; transform: translateY(-20vh) scale(1.5); }
-    }
-    
-    .container {
+    /* === LAYOUT === */
+    .app {
         position: relative;
         z-index: 1;
         display: grid;
-        grid-template-rows: auto auto 1fr auto;
+        grid-template-rows: 72px 80px 1fr 44px;
         height: 100vh;
-        padding: 20px;
-        gap: 15px;
+        padding: 20px 28px;
+        gap: 16px;
     }
     
-    /* Header */
+    /* === HEADER === */
     .header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid rgba(200,168,78,0.3);
-        padding-bottom: 15px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
     }
     
-    .logo {
+    .brand {
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 18px;
     }
     
-    .logo-icon {
-        font-size: 2em;
-        animation: pulse 3s ease-in-out infinite;
-    }
-    
-    @keyframes pulse {
-        0%, 100% { opacity: 0.7; transform: scale(1); }
-        50% { opacity: 1; transform: scale(1.05); }
-    }
-    
-    .logo h1 {
-        font-family: 'Orbitron', monospace;
-        color: var(--gold);
-        font-size: 1.6em;
-        letter-spacing: 4px;
-        text-shadow: 0 0 20px rgba(200,168,78,0.3);
-    }
-    
-    .logo .subtitle {
-        font-size: 0.7em;
-        color: var(--text-dim);
-        letter-spacing: 2px;
-        font-weight: 300;
-    }
-    
-    .clock {
-        font-family: 'Orbitron', monospace;
-        color: var(--gold);
-        font-size: 1.1em;
-        text-align: right;
-    }
-    
-    .clock .date { font-size: 0.7em; color: var(--text-dim); }
-    
-    /* Pipeline */
-    .pipeline {
+    .brand-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, var(--gold), var(--gold-dim));
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 5px;
+        font-size: 1.5em;
+        box-shadow: 0 4px 24px rgba(212,168,67,0.2);
+    }
+    
+    .brand-text h1 {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.5em;
+        font-weight: 700;
+        letter-spacing: 6px;
+        color: var(--gold-bright);
+        line-height: 1;
+    }
+    
+    .brand-text .tagline {
+        font-size: 0.7em;
+        font-weight: 400;
+        color: var(--text-dim);
+        letter-spacing: 3px;
+        margin-top: 4px;
+        text-transform: uppercase;
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+    }
+    
+    .system-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: var(--green-dim);
+        border: 1px solid rgba(52,211,153,0.2);
+        border-radius: 20px;
+    }
+    
+    .pulse-dot {
+        width: 8px; height: 8px;
+        background: var(--green);
+        border-radius: 50%;
+        position: relative;
+    }
+    .pulse-dot::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 1px solid var(--green);
+        animation: ripple 2s ease-out infinite;
+    }
+    @keyframes ripple {
+        0% { transform: scale(1); opacity: 0.6; }
+        100% { transform: scale(2.5); opacity: 0; }
+    }
+    
+    .system-status span {
+        font-size: 0.72em;
+        font-weight: 600;
+        color: var(--green);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+    
+    .clock-display {
+        text-align: right;
+    }
+    
+    .clock-time {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.6em;
+        font-weight: 600;
+        color: var(--text);
+        letter-spacing: 3px;
+        line-height: 1;
+    }
+    
+    .clock-date {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68em;
+        color: var(--text-dim);
+        margin-top: 4px;
+        letter-spacing: 1px;
+    }
+    
+    /* === PIPELINE === */
+    .pipeline-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
         padding: 10px 0;
     }
     
-    .pipe-node {
+    .pipe-stage {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 24px;
+        background: var(--bg3);
+        border: 1px solid var(--border);
+        position: relative;
+        transition: all 0.4s ease;
+    }
+    
+    .pipe-stage:first-child { border-radius: 12px 0 0 12px; }
+    .pipe-stage:last-child { border-radius: 0 12px 12px 0; }
+    
+    .pipe-stage.active {
+        background: linear-gradient(135deg, rgba(251,191,36,0.08), rgba(212,168,67,0.04));
+        border-color: var(--border-active);
+        box-shadow: 0 0 30px rgba(212,168,67,0.08);
+    }
+    
+    .pipe-stage.done {
+        background: linear-gradient(135deg, rgba(52,211,153,0.06), transparent);
+        border-color: rgba(52,211,153,0.2);
+    }
+    
+    .pipe-icon {
+        font-size: 1.4em;
+        width: 36px;
+        text-align: center;
+    }
+    
+    .pipe-info {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 5px;
-        padding: 8px 15px;
-        background: var(--bg3);
-        border-radius: 8px;
-        border: 1px solid rgba(200,168,78,0.15);
-        min-width: 90px;
-        transition: all 0.3s;
     }
     
-    .pipe-node.active {
-        border-color: var(--gold);
-        box-shadow: 0 0 15px rgba(200,168,78,0.2);
-        animation: nodeGlow 2s ease-in-out infinite;
+    .pipe-name {
+        font-size: 0.72em;
+        font-weight: 600;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text);
     }
     
-    .pipe-node.completed {
-        border-color: var(--green);
+    .pipe-state {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.6em;
+        font-weight: 500;
+        margin-top: 2px;
     }
+    .pipe-state.s-done { color: var(--green); }
+    .pipe-state.s-active { color: var(--yellow); }
+    .pipe-state.s-idle { color: var(--text-dim); }
     
-    @keyframes nodeGlow {
-        0%, 100% { box-shadow: 0 0 10px rgba(200,168,78,0.1); }
-        50% { box-shadow: 0 0 25px rgba(200,168,78,0.3); }
+    .pipe-connector {
+        width: 32px;
+        height: 1px;
+        background: var(--border);
+        position: relative;
     }
-    
-    .pipe-emoji { font-size: 1.3em; }
-    .pipe-label { font-size: 0.65em; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
-    .pipe-status { font-size: 0.55em; font-weight: 600; }
-    .pipe-status.idle { color: var(--text-dim); }
-    .pipe-status.working { color: var(--yellow); }
-    .pipe-status.done { color: var(--green); }
-    
-    .pipe-arrow {
+    .pipe-connector::after {
+        content: '›';
+        position: absolute;
+        right: -2px;
+        top: -9px;
+        font-size: 1.1em;
         color: var(--gold-dim);
-        font-size: 1.2em;
-        animation: arrowPulse 2s ease-in-out infinite;
     }
     
-    @keyframes arrowPulse {
-        0%, 100% { opacity: 0.3; }
-        50% { opacity: 1; }
-    }
-    
-    /* Main content grid */
-    .main-grid {
+    /* === MAIN GRID === */
+    .main {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 15px;
+        grid-template-columns: 1.1fr 1fr 1fr;
+        gap: 16px;
         overflow: hidden;
     }
     
     .panel {
         background: var(--bg2);
-        border-radius: 10px;
-        border: 1px solid rgba(200,168,78,0.1);
-        padding: 15px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
+    }
+    
+    .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px 12px;
+        border-bottom: 1px solid var(--border);
     }
     
     .panel-title {
         font-family: 'Orbitron', monospace;
-        font-size: 0.7em;
+        font-size: 0.68em;
+        font-weight: 600;
         color: var(--gold);
-        letter-spacing: 2px;
+        letter-spacing: 2.5px;
         text-transform: uppercase;
-        margin-bottom: 12px;
-        padding-bottom: 8px;
-        border-bottom: 1px solid rgba(200,168,78,0.1);
     }
     
-    /* Agent cards */
-    .agent-list { display: flex; flex-direction: column; gap: 8px; }
+    .panel-badge {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.6em;
+        padding: 3px 10px;
+        border-radius: 6px;
+        background: var(--bg4);
+        color: var(--text-dim);
+    }
     
-    .agent-row {
+    .panel-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 12px 16px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--bg4) transparent;
+    }
+    
+    /* === AGENTS === */
+    .agent-card {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px;
+        gap: 14px;
+        padding: 14px 16px;
         background: var(--bg3);
-        border-radius: 8px;
-        border-left: 3px solid var(--text-dim);
+        border-radius: 10px;
+        margin-bottom: 8px;
+        border: 1px solid transparent;
         transition: all 0.3s;
     }
     
-    .agent-row.working { border-left-color: var(--yellow); }
-    .agent-row.completed { border-left-color: var(--green); }
-    .agent-row.idle { border-left-color: var(--text-dim); }
-    
-    .agent-emoji { font-size: 1.4em; }
-    .agent-info { flex: 1; }
-    .agent-name { font-weight: 600; font-size: 0.85em; }
-    .agent-task { font-size: 0.7em; color: var(--text-dim); margin-top: 2px; }
-    
-    .status-dot {
-        width: 8px; height: 8px;
-        border-radius: 50%;
-        background: var(--text-dim);
+    .agent-card:hover {
+        border-color: var(--border);
+        background: var(--bg4);
     }
     
-    .status-dot.working {
-        background: var(--yellow);
-        animation: blink 1s ease-in-out infinite;
+    .agent-card.is-active {
+        border-left: 3px solid var(--yellow);
+        background: linear-gradient(90deg, rgba(251,191,36,0.04), transparent);
     }
     
-    .status-dot.completed { background: var(--green); }
-    
-    @keyframes blink {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.3; }
+    .agent-card.is-done {
+        border-left: 3px solid var(--green);
     }
     
-    /* Stats */
-    .stats-grid {
+    .agent-card.is-idle {
+        border-left: 3px solid var(--bg4);
+        opacity: 0.65;
+    }
+    
+    .agent-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: var(--bg4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4em;
+        flex-shrink: 0;
+    }
+    
+    .agent-card.is-active .agent-avatar {
+        background: var(--yellow-dim);
+    }
+    .agent-card.is-done .agent-avatar {
+        background: var(--green-dim);
+    }
+    
+    .agent-meta { flex: 1; min-width: 0; }
+    
+    .agent-name {
+        font-size: 0.82em;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .agent-task {
+        font-size: 0.7em;
+        color: var(--text-dim);
+        margin-top: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .agent-status-chip {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.58em;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 6px;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+    .chip-active { background: var(--yellow-dim); color: var(--yellow); }
+    .chip-done { background: var(--green-dim); color: var(--green); }
+    .chip-idle { background: var(--bg4); color: var(--text-dim); }
+    
+    /* === STATS === */
+    .stats-row {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
     }
     
-    .stat-box {
+    .stat-card {
         background: var(--bg3);
-        border-radius: 8px;
-        padding: 12px;
+        border-radius: 10px;
+        padding: 16px 12px;
         text-align: center;
+        border: 1px solid var(--border);
     }
     
-    .stat-number {
+    .stat-value {
         font-family: 'Orbitron', monospace;
-        font-size: 1.8em;
-        color: var(--gold);
+        font-size: 2em;
         font-weight: 700;
+        color: var(--gold-bright);
+        line-height: 1;
     }
     
     .stat-label {
-        font-size: 0.6em;
+        font-size: 0.58em;
+        font-weight: 500;
         color: var(--text-dim);
         text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-top: 3px;
+        letter-spacing: 1.5px;
+        margin-top: 6px;
     }
     
-    /* Activity log */
-    .log-list { display: flex; flex-direction: column; gap: 6px; }
-    
-    .log-entry {
+    /* === CONTENT QUEUE === */
+    .queue-item {
         display: flex;
-        gap: 8px;
-        align-items: flex-start;
-        padding: 6px 8px;
-        background: var(--bg3);
-        border-radius: 6px;
-        font-size: 0.75em;
-        animation: slideIn 0.5s ease-out;
-    }
-    
-    @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
-    }
-    
-    .log-time { color: var(--gold-dim); font-family: 'Orbitron', monospace; font-size: 0.85em; white-space: nowrap; }
-    .log-text { color: var(--text-dim); line-height: 1.3; }
-    
-    /* Content queue */
-    .content-item {
-        display: flex;
-        justify-content: space-between;
         align-items: center;
-        padding: 8px 10px;
+        justify-content: space-between;
+        padding: 12px 14px;
         background: var(--bg3);
-        border-radius: 6px;
-        margin-bottom: 6px;
-        border-left: 3px solid var(--yellow);
-    }
-    
-    .content-item.approved { border-left-color: var(--green); }
-    .content-item.in-progress { border-left-color: var(--yellow); }
-    .content-item.pending { border-left-color: var(--text-dim); }
-    
-    .content-title { font-size: 0.8em; font-weight: 600; }
-    .content-meta { font-size: 0.65em; color: var(--text-dim); }
-    
-    .badge {
-        font-size: 0.6em;
-        padding: 2px 8px;
         border-radius: 10px;
-        text-transform: uppercase;
-        font-weight: 600;
-        letter-spacing: 1px;
+        margin-bottom: 8px;
+        border: 1px solid var(--border);
+        transition: all 0.3s;
     }
     
-    .badge.draft { background: rgba(200,168,78,0.15); color: var(--gold); }
-    .badge.review { background: rgba(33,150,243,0.15); color: var(--blue); }
-    .badge.ready { background: rgba(76,175,80,0.15); color: var(--green); }
+    .queue-item:hover { border-color: var(--border-active); }
     
-    /* Footer */
+    .queue-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .queue-num {
+        font-family: 'Orbitron', monospace;
+        font-size: 0.7em;
+        color: var(--gold-dim);
+        width: 26px;
+        flex-shrink: 0;
+    }
+    
+    .queue-info { min-width: 0; }
+    
+    .queue-title {
+        font-size: 0.8em;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .queue-sub {
+        font-size: 0.65em;
+        color: var(--text-dim);
+        margin-top: 2px;
+    }
+    
+    .tag {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.56em;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 6px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        flex-shrink: 0;
+    }
+    .tag-draft { background: var(--gold-glow); color: var(--gold); }
+    .tag-review { background: var(--blue-dim); color: var(--blue); }
+    .tag-ready { background: var(--green-dim); color: var(--green); }
+    
+    /* === ACTIVITY LOG === */
+    .log-item {
+        display: flex;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        transition: background 0.2s;
+    }
+    
+    .log-item:hover { background: var(--bg3); }
+    
+    .log-time {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68em;
+        color: var(--gold-dim);
+        flex-shrink: 0;
+        width: 44px;
+        padding-top: 1px;
+    }
+    
+    .log-icon {
+        flex-shrink: 0;
+        width: 20px;
+        text-align: center;
+        font-size: 0.85em;
+    }
+    
+    .log-msg {
+        font-size: 0.75em;
+        color: var(--text-mid);
+        line-height: 1.5;
+    }
+    
+    .log-msg strong { color: var(--text); font-weight: 600; }
+    
+    /* === FOOTER === */
     .footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding-top: 10px;
-        border-top: 1px solid rgba(200,168,78,0.1);
-        font-size: 0.65em;
-        color: var(--text-dim);
+        border-top: 1px solid var(--border);
     }
     
-    .footer .status-live {
+    .footer-item {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.62em;
+        color: var(--text-dim);
+        letter-spacing: 0.5px;
+    }
+    
+    .footer-live {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
     }
     
-    .live-dot {
-        width: 6px; height: 6px;
+    .footer-live .mini-pulse {
+        width: 5px; height: 5px;
         background: var(--green);
         border-radius: 50%;
-        animation: blink 2s ease-in-out infinite;
+        animation: blink 2s ease infinite;
+    }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    
+    /* === SCROLLBAR === */
+    .panel-body::-webkit-scrollbar { width: 4px; }
+    .panel-body::-webkit-scrollbar-track { background: transparent; }
+    .panel-body::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 4px; }
+    
+    /* === RESPONSIVE (large screens) === */
+    @media (min-width: 1600px) {
+        .app { padding: 28px 40px; gap: 20px; }
+        .brand-text h1 { font-size: 1.8em; }
+        .clock-time { font-size: 2em; }
+        .stat-value { font-size: 2.4em; }
+        .agent-card { padding: 16px 20px; }
+        .pipe-stage { padding: 14px 32px; }
     }
     
-    /* Scanning line animation */
-    .scan-line {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, var(--gold), transparent);
-        opacity: 0.3;
-        animation: scan 8s linear infinite;
-        z-index: 0;
-    }
-    
-    @keyframes scan {
-        0% { top: 0; }
-        100% { top: 100vh; }
+    @media (min-width: 2000px) {
+        .app { padding: 36px 56px; gap: 24px; }
+        .brand-text h1 { font-size: 2.1em; }
+        .stat-value { font-size: 2.8em; }
+        .main { gap: 20px; }
     }
 </style>
 </head>
 <body>
-    <div class="bg-grid"></div>
-    <div class="scan-line"></div>
-    
-    <!-- Particles -->
-    <div class="particle" style="left:10%; animation-delay:0s; animation-duration:6s"></div>
-    <div class="particle" style="left:25%; animation-delay:1s; animation-duration:8s"></div>
-    <div class="particle" style="left:40%; animation-delay:2s; animation-duration:7s"></div>
-    <div class="particle" style="left:55%; animation-delay:0.5s; animation-duration:9s"></div>
-    <div class="particle" style="left:70%; animation-delay:3s; animation-duration:6.5s"></div>
-    <div class="particle" style="left:85%; animation-delay:1.5s; animation-duration:7.5s"></div>
-    <div class="particle" style="left:95%; animation-delay:4s; animation-duration:8.5s"></div>
-    <div class="particle" style="left:5%; animation-delay:2.5s; animation-duration:10s"></div>
-    <div class="particle" style="left:50%; animation-delay:3.5s; animation-duration:5.5s"></div>
-    <div class="particle" style="left:75%; animation-delay:0.8s; animation-duration:11s"></div>
-    
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">
-                <div class="logo-icon">⛏</div>
-                <div>
-                    <h1>MEDIA OFFICE</h1>
-                    <div class="subtitle">VIRTUAL MEDIA OFFICE v1.0</div>
-                </div>
-            </div>
-            <div class="clock">
-                <div id="time"></div>
-                <div class="date" id="date"></div>
+
+<div class="bg-noise"></div>
+<div class="bg-gradient"></div>
+<div class="grid-overlay"></div>
+<div class="scan-line"></div>
+
+<div class="app">
+    <!-- HEADER -->
+    <header class="header">
+        <div class="brand">
+            <div class="brand-icon">⛏</div>
+            <div class="brand-text">
+                <h1>MEDIA OFFICE</h1>
+                <div class="tagline">Command Center v2.0</div>
             </div>
         </div>
-        
-        <!-- Pipeline -->
-        <div class="pipeline">
-            <div class="pipe-node completed">
-                <div class="pipe-emoji">🔍</div>
-                <div class="pipe-label">Scout</div>
-                <div class="pipe-status done">DONE</div>
+        <div class="header-right">
+            <div class="system-status">
+                <div class="pulse-dot"></div>
+                <span>Systems Online</span>
             </div>
-            <div class="pipe-arrow">→</div>
-            <div class="pipe-node active">
-                <div class="pipe-emoji">📝</div>
-                <div class="pipe-label">SMM</div>
-                <div class="pipe-status working">ACTIVE</div>
-            </div>
-            <div class="pipe-arrow">→</div>
-            <div class="pipe-node">
-                <div class="pipe-emoji">🎨</div>
-                <div class="pipe-label">Designer</div>
-                <div class="pipe-status idle">STANDBY</div>
-            </div>
-            <div class="pipe-arrow">→</div>
-            <div class="pipe-node">
-                <div class="pipe-emoji">🎬</div>
-                <div class="pipe-label">Editor</div>
-                <div class="pipe-status idle">STANDBY</div>
-            </div>
-            <div class="pipe-arrow">→</div>
-            <div class="pipe-node">
-                <div class="pipe-emoji">📤</div>
-                <div class="pipe-label">Publisher</div>
-                <div class="pipe-status idle">STANDBY</div>
-            </div>
-            <div class="pipe-arrow">→</div>
-            <div class="pipe-node">
-                <div class="pipe-emoji">✅</div>
-                <div class="pipe-label">Approve</div>
-                <div class="pipe-status idle">WAITING</div>
+            <div class="clock-display">
+                <div class="clock-time" id="time">00:00:00</div>
+                <div class="clock-date" id="date">-- --- ---- UTC</div>
             </div>
         </div>
-        
-        <!-- Main Grid -->
-        <div class="main-grid">
-            <!-- Agents Panel -->
-            <div class="panel">
-                <div class="panel-title">👥 Agents</div>
-                <div class="agent-list">
-                    <div class="agent-row completed">
-                        <div class="agent-emoji">🔍</div>
-                        <div class="agent-info">
-                            <div class="agent-name">TREND SCOUT</div>
-                            <div class="agent-task">Deep analysis — 15+ pages analyzed</div>
-                        </div>
-                        <div class="status-dot completed"></div>
+    </header>
+
+    <!-- PIPELINE -->
+    <div class="pipeline-bar">
+        <div class="pipe-stage done">
+            <div class="pipe-icon">🔍</div>
+            <div class="pipe-info">
+                <div class="pipe-name">Scout</div>
+                <div class="pipe-state s-done">● Complete</div>
+            </div>
+        </div>
+        <div class="pipe-connector"></div>
+        <div class="pipe-stage active">
+            <div class="pipe-icon">📝</div>
+            <div class="pipe-info">
+                <div class="pipe-name">SMM</div>
+                <div class="pipe-state s-active">◉ Active</div>
+            </div>
+        </div>
+        <div class="pipe-connector"></div>
+        <div class="pipe-stage">
+            <div class="pipe-icon">🎨</div>
+            <div class="pipe-info">
+                <div class="pipe-name">Design</div>
+                <div class="pipe-state s-idle">○ Standby</div>
+            </div>
+        </div>
+        <div class="pipe-connector"></div>
+        <div class="pipe-stage">
+            <div class="pipe-icon">🎬</div>
+            <div class="pipe-info">
+                <div class="pipe-name">Edit</div>
+                <div class="pipe-state s-idle">○ Standby</div>
+            </div>
+        </div>
+        <div class="pipe-connector"></div>
+        <div class="pipe-stage">
+            <div class="pipe-icon">📤</div>
+            <div class="pipe-info">
+                <div class="pipe-name">Publish</div>
+                <div class="pipe-state s-idle">○ Standby</div>
+            </div>
+        </div>
+        <div class="pipe-connector"></div>
+        <div class="pipe-stage">
+            <div class="pipe-icon">✅</div>
+            <div class="pipe-info">
+                <div class="pipe-name">Approve</div>
+                <div class="pipe-state s-idle">○ Waiting</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+        <!-- AGENTS PANEL -->
+        <div class="panel">
+            <div class="panel-head">
+                <span class="panel-title">👥 Agents</span>
+                <span class="panel-badge">6 units</span>
+            </div>
+            <div class="panel-body">
+                <div class="agent-card is-done">
+                    <div class="agent-avatar">🔍</div>
+                    <div class="agent-meta">
+                        <div class="agent-name">Trend Scout</div>
+                        <div class="agent-task">Deep analysis — 15+ pages analyzed</div>
                     </div>
-                    <div class="agent-row working">
-                        <div class="agent-emoji">📝</div>
-                        <div class="agent-info">
-                            <div class="agent-name">SMM STRATEGIST</div>
-                            <div class="agent-task">Writing style proposals & first posts</div>
-                        </div>
-                        <div class="status-dot working"></div>
+                    <span class="agent-status-chip chip-done">Done</span>
+                </div>
+                <div class="agent-card is-active">
+                    <div class="agent-avatar">📝</div>
+                    <div class="agent-meta">
+                        <div class="agent-name">SMM Strategist</div>
+                        <div class="agent-task">Writing style proposals & first posts</div>
                     </div>
-                    <div class="agent-row idle">
-                        <div class="agent-emoji">🎨</div>
-                        <div class="agent-info">
-                            <div class="agent-name">ART DIRECTOR</div>
-                            <div class="agent-task">Waiting for style approval</div>
-                        </div>
-                        <div class="status-dot"></div>
+                    <span class="agent-status-chip chip-active">Active</span>
+                </div>
+                <div class="agent-card is-idle">
+                    <div class="agent-avatar">🎨</div>
+                    <div class="agent-meta">
+                        <div class="agent-name">Art Director</div>
+                        <div class="agent-task">Waiting for style approval</div>
                     </div>
-                    <div class="agent-row idle">
-                        <div class="agent-emoji">🎬</div>
-                        <div class="agent-info">
-                            <div class="agent-name">MOTION EDITOR</div>
-                            <div class="agent-task">Waiting for visual assets</div>
-                        </div>
-                        <div class="status-dot"></div>
+                    <span class="agent-status-chip chip-idle">Standby</span>
+                </div>
+                <div class="agent-card is-idle">
+                    <div class="agent-avatar">🎬</div>
+                    <div class="agent-meta">
+                        <div class="agent-name">Motion Editor</div>
+                        <div class="agent-task">Waiting for visual assets</div>
                     </div>
-                    <div class="agent-row idle">
-                        <div class="agent-emoji">📤</div>
-                        <div class="agent-info">
-                            <div class="agent-name">PUBLISHER</div>
-                            <div class="agent-task">Waiting for content package</div>
-                        </div>
-                        <div class="status-dot"></div>
+                    <span class="agent-status-chip chip-idle">Standby</span>
+                </div>
+                <div class="agent-card is-idle">
+                    <div class="agent-avatar">📤</div>
+                    <div class="agent-meta">
+                        <div class="agent-name">Publisher</div>
+                        <div class="agent-task">Waiting for content package</div>
                     </div>
-                    <div class="agent-row working">
-                        <div class="agent-emoji">🫡</div>
-                        <div class="agent-info">
-                            <div class="agent-name">JARVIS (PRODUCER)</div>
-                            <div class="agent-task">Coordinating pipeline, building office</div>
-                        </div>
-                        <div class="status-dot working"></div>
+                    <span class="agent-status-chip chip-idle">Standby</span>
+                </div>
+                <div class="agent-card is-active">
+                    <div class="agent-avatar">🫡</div>
+                    <div class="agent-meta">
+                        <div class="agent-name">Jarvis — Producer</div>
+                        <div class="agent-task">Coordinating pipeline, building office</div>
                     </div>
+                    <span class="agent-status-chip chip-active">Active</span>
                 </div>
             </div>
-            
-            <!-- Stats + Content -->
-            <div class="panel">
-                <div class="panel-title">📊 Statistics</div>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-number">3</div>
-                        <div class="stat-label">Posts Drafted</div>
+        </div>
+
+        <!-- STATS + QUEUE PANEL -->
+        <div class="panel">
+            <div class="panel-head">
+                <span class="panel-title">📊 Overview</span>
+                <span class="panel-badge">live</span>
+            </div>
+            <div class="panel-body">
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Drafted</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-number">0</div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
                         <div class="stat-label">Published</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-number">0</div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
                         <div class="stat-label">Images</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-number">0</div>
+                    <div class="stat-card">
+                        <div class="stat-value">0</div>
                         <div class="stat-label">Videos</div>
                     </div>
                 </div>
-                
-                <div class="panel-title" style="margin-top:15px">📦 Content Queue</div>
-                <div class="content-item in-progress">
-                    <div>
-                        <div class="content-title">Style Proposal</div>
-                        <div class="content-meta">3 варіанти стилю для апруву</div>
-                    </div>
-                    <span class="badge review">review</span>
+
+                <div class="panel-head" style="padding: 12px 0 10px; margin: 0; border: none; border-top: 1px solid var(--border);">
+                    <span class="panel-title">📦 Content Queue</span>
                 </div>
-                <div class="content-item pending">
-                    <div>
-                        <div class="content-title">Post #001 — Анонс UNIT</div>
-                        <div class="content-meta">Instagram + Facebook</div>
+
+                <div class="queue-item">
+                    <div class="queue-left">
+                        <span class="queue-num">#00</span>
+                        <div class="queue-info">
+                            <div class="queue-title">Style Proposal</div>
+                            <div class="queue-sub">3 варіанти стилю для апруву</div>
+                        </div>
                     </div>
-                    <span class="badge draft">draft</span>
+                    <span class="tag tag-review">Review</span>
                 </div>
-                <div class="content-item pending">
-                    <div>
-                        <div class="content-title">Post #002 — Збір на пікапи</div>
-                        <div class="content-meta">Instagram + Facebook</div>
+                <div class="queue-item">
+                    <div class="queue-left">
+                        <span class="queue-num">#01</span>
+                        <div class="queue-info">
+                            <div class="queue-title">Анонс підрозділу</div>
+                            <div class="queue-sub">Instagram + Facebook</div>
+                        </div>
                     </div>
-                    <span class="badge draft">draft</span>
+                    <span class="tag tag-draft">Draft</span>
                 </div>
-                <div class="content-item pending">
-                    <div>
-                        <div class="content-title">Post #003 — Підземний дрон</div>
-                        <div class="content-meta">Карусель Instagram</div>
+                <div class="queue-item">
+                    <div class="queue-left">
+                        <span class="queue-num">#02</span>
+                        <div class="queue-info">
+                            <div class="queue-title">Збір на пікапи</div>
+                            <div class="queue-sub">Instagram + Facebook</div>
+                        </div>
                     </div>
-                    <span class="badge draft">draft</span>
+                    <span class="tag tag-draft">Draft</span>
                 </div>
-            </div>
-            
-            <!-- Activity Log -->
-            <div class="panel">
-                <div class="panel-title">📡 Activity Log</div>
-                <div class="log-list">
-                    <div class="log-entry">
-                        <span class="log-time">03:40</span>
-                        <span class="log-text">🔍 Scout: Deep analysis of 15+ military pages completed</span>
+                <div class="queue-item">
+                    <div class="queue-left">
+                        <span class="queue-num">#03</span>
+                        <div class="queue-info">
+                            <div class="queue-title">Підземний дрон — explainer</div>
+                            <div class="queue-sub">Карусель Instagram</div>
+                        </div>
                     </div>
-                    <div class="log-entry">
-                        <span class="log-time">03:35</span>
-                        <span class="log-text">📝 SMM: 3 style proposals generated (Tech Noir / Build in Public / AI Anime)</span>
-                    </div>
-                    <div class="log-entry">
-                        <span class="log-time">03:30</span>
-                        <span class="log-text">🔍 Scout: Analyzed 3 ОШБр marketing — anime campaign, pin-up, Hollywood style</span>
-                    </div>
-                    <div class="log-entry">
-                        <span class="log-time">03:25</span>
-                        <span class="log-text">🔍 Scout: Key insight — Taras Ishchyk (ZSU brand designer) interview analyzed</span>
-                    </div>
-                    <div class="log-entry">
-                        <span class="log-time">03:20</span>
-                        <span class="log-text">📝 SMM: Post drafts #001-003 created</span>
-                    </div>
-                    <div class="log-entry">
-                        <span class="log-time">03:10</span>
-                        <span class="log-text">🫡 Producer: Brand Bible created</span>
-                    </div>
-                    <div class="log-entry">
-                        <span class="log-time">03:05</span>
-                        <span class="log-text">🔍 Scout: First report — 10 content ideas generated</span>
-                    </div>
-                    <div class="log-entry">
-                        <span class="log-time">02:55</span>
-                        <span class="log-text">📋 Polozhennya UNIT uploaded & analyzed</span>
-                    </div>
-                    <div class="log-entry">
-                        <span class="log-time">02:50</span>
-                        <span class="log-text">⛏ MEDIA OFFICE office initialized</span>
-                    </div>
-                    <div class="log-entry">
-                        <span class="log-time">02:48</span>
-                        <span class="log-text">🎙 Meeting transcript (62 min) processed via Groq Whisper</span>
-                    </div>
+                    <span class="tag tag-draft">Draft</span>
                 </div>
             </div>
         </div>
-        
-        <!-- Footer -->
-        <div class="footer">
-            <div class="status-live">
-                <div class="live-dot"></div>
-                <span>SYSTEM ONLINE — Auto-refresh every 30s</span>
+
+        <!-- ACTIVITY LOG PANEL -->
+        <div class="panel">
+            <div class="panel-head">
+                <span class="panel-title">📡 Activity</span>
+                <span class="panel-badge">latest</span>
             </div>
-            <div>MEDIA OFFICE Virtual Office v1.0 — Powered by Jarvis</div>
-            <div>Balance: $3.73 ATXP</div>
+            <div class="panel-body">
+                <div class="log-item">
+                    <span class="log-time">03:40</span>
+                    <span class="log-icon">🔍</span>
+                    <span class="log-msg"><strong>Scout</strong> — Deep analysis of 15+ military pages completed</span>
+                </div>
+                <div class="log-item">
+                    <span class="log-time">03:35</span>
+                    <span class="log-icon">📝</span>
+                    <span class="log-msg"><strong>SMM</strong> — 3 style proposals generated (Tech Noir / Build in Public / AI Anime)</span>
+                </div>
+                <div class="log-item">
+                    <span class="log-time">03:30</span>
+                    <span class="log-icon">🔍</span>
+                    <span class="log-msg"><strong>Scout</strong> — Analyzed 3 ОШБр marketing: anime, pin-up, Hollywood style</span>
+                </div>
+                <div class="log-item">
+                    <span class="log-time">03:25</span>
+                    <span class="log-icon">🔍</span>
+                    <span class="log-msg"><strong>Scout</strong> — Key insight: Taras Ishchyk interview analyzed</span>
+                </div>
+                <div class="log-item">
+                    <span class="log-time">03:20</span>
+                    <span class="log-icon">📝</span>
+                    <span class="log-msg"><strong>SMM</strong> — Post drafts #001–003 created</span>
+                </div>
+                <div class="log-item">
+                    <span class="log-time">03:10</span>
+                    <span class="log-icon">🫡</span>
+                    <span class="log-msg"><strong>Producer</strong> — Brand Bible created</span>
+                </div>
+                <div class="log-item">
+                    <span class="log-time">03:05</span>
+                    <span class="log-icon">🔍</span>
+                    <span class="log-msg"><strong>Scout</strong> — First report: 10 content ideas generated</span>
+                </div>
+                <div class="log-item">
+                    <span class="log-time">02:55</span>
+                    <span class="log-icon">📋</span>
+                    <span class="log-msg"><strong>System</strong> — Unit documents uploaded & analyzed</span>
+                </div>
+                <div class="log-item">
+                    <span class="log-time">02:50</span>
+                    <span class="log-icon">⛏</span>
+                    <span class="log-msg"><strong>System</strong> — Media Office initialized</span>
+                </div>
+                <div class="log-item">
+                    <span class="log-time">02:48</span>
+                    <span class="log-icon">🎙</span>
+                    <span class="log-msg"><strong>System</strong> — Meeting transcript (62 min) processed via Groq Whisper</span>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <script>
-        function updateClock() {
-            const now = new Date();
-            const h = String(now.getUTCHours()).padStart(2, '0');
-            const m = String(now.getUTCMinutes()).padStart(2, '0');
-            const s = String(now.getUTCSeconds()).padStart(2, '0');
-            document.getElementById('time').textContent = `${h}:${m}:${s}`;
-            
-            const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-            const d = now.getUTCDate();
-            const mo = months[now.getUTCMonth()];
-            const y = now.getUTCFullYear();
-            document.getElementById('date').textContent = `${d} ${mo} ${y} UTC`;
-        }
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-live footer-item">
+            <div class="mini-pulse"></div>
+            <span>Auto-refresh 30s</span>
+        </div>
+        <div class="footer-item">Media Office v2.0 — Powered by Jarvis</div>
+        <div class="footer-item">Balance: $3.73 ATXP</div>
+    </footer>
+</div>
+
+<script>
+    function updateClock() {
+        const now = new Date();
+        const h = String(now.getUTCHours()).padStart(2, '0');
+        const m = String(now.getUTCMinutes()).padStart(2, '0');
+        const s = String(now.getUTCSeconds()).padStart(2, '0');
+        document.getElementById('time').textContent = `${h}:${m}:${s}`;
         
-        updateClock();
-        setInterval(updateClock, 1000);
-    </script>
+        const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+        const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+        const day = days[now.getUTCDay()];
+        const d = String(now.getUTCDate()).padStart(2, '0');
+        const mo = months[now.getUTCMonth()];
+        const y = now.getUTCFullYear();
+        document.getElementById('date').textContent = `${day} ${d} ${mo} ${y} · UTC`;
+    }
+    
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
+
 </body>
 </html>
