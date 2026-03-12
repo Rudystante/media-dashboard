@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="refresh" content="30">
+<title>KARRAK MEDIA — Virtual Office</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;700&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+        --gold: #c8a84e;
+        --gold-dim: #8a7235;
+        --bg: #0a0a0a;
+        --bg2: #111111;
+        --bg3: #1a1a1a;
+        --text: #e0e0e0;
+        --text-dim: #666;
+        --green: #4caf50;
+        --yellow: #f5a623;
+        --red: #f44336;
+        --blue: #2196f3;
+    }
+    
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Inter', system-ui, sans-serif;
+        overflow: hidden;
+        height: 100vh;
+    }
+    
+    /* Animated background grid */
+    .bg-grid {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background-image: 
+            linear-gradient(rgba(200,168,78,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(200,168,78,0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: gridMove 20s linear infinite;
+        z-index: 0;
+    }
+    
+    @keyframes gridMove {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
+    }
+    
+    /* Floating particles */
+    .particle {
+        position: fixed;
+        width: 2px; height: 2px;
+        background: var(--gold);
+        border-radius: 50%;
+        opacity: 0;
+        animation: float 8s ease-in-out infinite;
+        z-index: 0;
+    }
+    
+    @keyframes float {
+        0% { opacity: 0; transform: translateY(100vh) scale(0); }
+        50% { opacity: 0.6; }
+        100% { opacity: 0; transform: translateY(-20vh) scale(1.5); }
+    }
+    
+    .container {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+        height: 100vh;
+        padding: 20px;
+        gap: 15px;
+    }
+    
+    /* Header */
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(200,168,78,0.3);
+        padding-bottom: 15px;
+    }
+    
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .logo-icon {
+        font-size: 2em;
+        animation: pulse 3s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 0.7; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.05); }
+    }
+    
+    .logo h1 {
+        font-family: 'Orbitron', monospace;
+        color: var(--gold);
+        font-size: 1.6em;
+        letter-spacing: 4px;
+        text-shadow: 0 0 20px rgba(200,168,78,0.3);
+    }
+    
+    .logo .subtitle {
+        font-size: 0.7em;
+        color: var(--text-dim);
+        letter-spacing: 2px;
+        font-weight: 300;
+    }
+    
+    .clock {
+        font-family: 'Orbitron', monospace;
+        color: var(--gold);
+        font-size: 1.1em;
+        text-align: right;
+    }
+    
+    .clock .date { font-size: 0.7em; color: var(--text-dim); }
+    
+    /* Pipeline */
+    .pipeline {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 10px 0;
+    }
+    
+    .pipe-node {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        padding: 8px 15px;
+        background: var(--bg3);
+        border-radius: 8px;
+        border: 1px solid rgba(200,168,78,0.15);
+        min-width: 90px;
+        transition: all 0.3s;
+    }
+    
+    .pipe-node.active {
+        border-color: var(--gold);
+        box-shadow: 0 0 15px rgba(200,168,78,0.2);
+        animation: nodeGlow 2s ease-in-out infinite;
+    }
+    
+    .pipe-node.completed {
+        border-color: var(--green);
+    }
+    
+    @keyframes nodeGlow {
+        0%, 100% { box-shadow: 0 0 10px rgba(200,168,78,0.1); }
+        50% { box-shadow: 0 0 25px rgba(200,168,78,0.3); }
+    }
+    
+    .pipe-emoji { font-size: 1.3em; }
+    .pipe-label { font-size: 0.65em; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+    .pipe-status { font-size: 0.55em; font-weight: 600; }
+    .pipe-status.idle { color: var(--text-dim); }
+    .pipe-status.working { color: var(--yellow); }
+    .pipe-status.done { color: var(--green); }
+    
+    .pipe-arrow {
+        color: var(--gold-dim);
+        font-size: 1.2em;
+        animation: arrowPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes arrowPulse {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 1; }
+    }
+    
+    /* Main content grid */
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+        overflow: hidden;
+    }
+    
+    .panel {
+        background: var(--bg2);
+        border-radius: 10px;
+        border: 1px solid rgba(200,168,78,0.1);
+        padding: 15px;
+        overflow: hidden;
+    }
+    
+    .panel-title {
+        font-family: 'Orbitron', monospace;
+        font-size: 0.7em;
+        color: var(--gold);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(200,168,78,0.1);
+    }
+    
+    /* Agent cards */
+    .agent-list { display: flex; flex-direction: column; gap: 8px; }
+    
+    .agent-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: var(--bg3);
+        border-radius: 8px;
+        border-left: 3px solid var(--text-dim);
+        transition: all 0.3s;
+    }
+    
+    .agent-row.working { border-left-color: var(--yellow); }
+    .agent-row.completed { border-left-color: var(--green); }
+    .agent-row.idle { border-left-color: var(--text-dim); }
+    
+    .agent-emoji { font-size: 1.4em; }
+    .agent-info { flex: 1; }
+    .agent-name { font-weight: 600; font-size: 0.85em; }
+    .agent-task { font-size: 0.7em; color: var(--text-dim); margin-top: 2px; }
+    
+    .status-dot {
+        width: 8px; height: 8px;
+        border-radius: 50%;
+        background: var(--text-dim);
+    }
+    
+    .status-dot.working {
+        background: var(--yellow);
+        animation: blink 1s ease-in-out infinite;
+    }
+    
+    .status-dot.completed { background: var(--green); }
+    
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
+    
+    /* Stats */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+    
+    .stat-box {
+        background: var(--bg3);
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+    }
+    
+    .stat-number {
+        font-family: 'Orbitron', monospace;
+        font-size: 1.8em;
+        color: var(--gold);
+        font-weight: 700;
+    }
+    
+    .stat-label {
+        font-size: 0.6em;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 3px;
+    }
+    
+    /* Activity log */
+    .log-list { display: flex; flex-direction: column; gap: 6px; }
+    
+    .log-entry {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        padding: 6px 8px;
+        background: var(--bg3);
+        border-radius: 6px;
+        font-size: 0.75em;
+        animation: slideIn 0.5s ease-out;
+    }
+    
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-20px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    
+    .log-time { color: var(--gold-dim); font-family: 'Orbitron', monospace; font-size: 0.85em; white-space: nowrap; }
+    .log-text { color: var(--text-dim); line-height: 1.3; }
+    
+    /* Content queue */
+    .content-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 10px;
+        background: var(--bg3);
+        border-radius: 6px;
+        margin-bottom: 6px;
+        border-left: 3px solid var(--yellow);
+    }
+    
+    .content-item.approved { border-left-color: var(--green); }
+    .content-item.in-progress { border-left-color: var(--yellow); }
+    .content-item.pending { border-left-color: var(--text-dim); }
+    
+    .content-title { font-size: 0.8em; font-weight: 600; }
+    .content-meta { font-size: 0.65em; color: var(--text-dim); }
+    
+    .badge {
+        font-size: 0.6em;
+        padding: 2px 8px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 1px;
+    }
+    
+    .badge.draft { background: rgba(200,168,78,0.15); color: var(--gold); }
+    .badge.review { background: rgba(33,150,243,0.15); color: var(--blue); }
+    .badge.ready { background: rgba(76,175,80,0.15); color: var(--green); }
+    
+    /* Footer */
+    .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 10px;
+        border-top: 1px solid rgba(200,168,78,0.1);
+        font-size: 0.65em;
+        color: var(--text-dim);
+    }
+    
+    .footer .status-live {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .live-dot {
+        width: 6px; height: 6px;
+        background: var(--green);
+        border-radius: 50%;
+        animation: blink 2s ease-in-out infinite;
+    }
+    
+    /* Scanning line animation */
+    .scan-line {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        opacity: 0.3;
+        animation: scan 8s linear infinite;
+        z-index: 0;
+    }
+    
+    @keyframes scan {
+        0% { top: 0; }
+        100% { top: 100vh; }
+    }
+</style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="scan-line"></div>
+    
+    <!-- Particles -->
+    <div class="particle" style="left:10%; animation-delay:0s; animation-duration:6s"></div>
+    <div class="particle" style="left:25%; animation-delay:1s; animation-duration:8s"></div>
+    <div class="particle" style="left:40%; animation-delay:2s; animation-duration:7s"></div>
+    <div class="particle" style="left:55%; animation-delay:0.5s; animation-duration:9s"></div>
+    <div class="particle" style="left:70%; animation-delay:3s; animation-duration:6.5s"></div>
+    <div class="particle" style="left:85%; animation-delay:1.5s; animation-duration:7.5s"></div>
+    <div class="particle" style="left:95%; animation-delay:4s; animation-duration:8.5s"></div>
+    <div class="particle" style="left:5%; animation-delay:2.5s; animation-duration:10s"></div>
+    <div class="particle" style="left:50%; animation-delay:3.5s; animation-duration:5.5s"></div>
+    <div class="particle" style="left:75%; animation-delay:0.8s; animation-duration:11s"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">⛏</div>
+                <div>
+                    <h1>KARRAK MEDIA</h1>
+                    <div class="subtitle">VIRTUAL MEDIA OFFICE v1.0</div>
+                </div>
+            </div>
+            <div class="clock">
+                <div id="time"></div>
+                <div class="date" id="date"></div>
+            </div>
+        </div>
+        
+        <!-- Pipeline -->
+        <div class="pipeline">
+            <div class="pipe-node completed">
+                <div class="pipe-emoji">🔍</div>
+                <div class="pipe-label">Scout</div>
+                <div class="pipe-status done">DONE</div>
+            </div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-node active">
+                <div class="pipe-emoji">📝</div>
+                <div class="pipe-label">SMM</div>
+                <div class="pipe-status working">ACTIVE</div>
+            </div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-node">
+                <div class="pipe-emoji">🎨</div>
+                <div class="pipe-label">Designer</div>
+                <div class="pipe-status idle">STANDBY</div>
+            </div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-node">
+                <div class="pipe-emoji">🎬</div>
+                <div class="pipe-label">Editor</div>
+                <div class="pipe-status idle">STANDBY</div>
+            </div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-node">
+                <div class="pipe-emoji">📤</div>
+                <div class="pipe-label">Publisher</div>
+                <div class="pipe-status idle">STANDBY</div>
+            </div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-node">
+                <div class="pipe-emoji">✅</div>
+                <div class="pipe-label">Approve</div>
+                <div class="pipe-status idle">WAITING</div>
+            </div>
+        </div>
+        
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Agents Panel -->
+            <div class="panel">
+                <div class="panel-title">👥 Agents</div>
+                <div class="agent-list">
+                    <div class="agent-row completed">
+                        <div class="agent-emoji">🔍</div>
+                        <div class="agent-info">
+                            <div class="agent-name">TREND SCOUT</div>
+                            <div class="agent-task">Deep analysis — 15+ pages analyzed</div>
+                        </div>
+                        <div class="status-dot completed"></div>
+                    </div>
+                    <div class="agent-row working">
+                        <div class="agent-emoji">📝</div>
+                        <div class="agent-info">
+                            <div class="agent-name">SMM STRATEGIST</div>
+                            <div class="agent-task">Writing style proposals & first posts</div>
+                        </div>
+                        <div class="status-dot working"></div>
+                    </div>
+                    <div class="agent-row idle">
+                        <div class="agent-emoji">🎨</div>
+                        <div class="agent-info">
+                            <div class="agent-name">ART DIRECTOR</div>
+                            <div class="agent-task">Waiting for style approval</div>
+                        </div>
+                        <div class="status-dot"></div>
+                    </div>
+                    <div class="agent-row idle">
+                        <div class="agent-emoji">🎬</div>
+                        <div class="agent-info">
+                            <div class="agent-name">MOTION EDITOR</div>
+                            <div class="agent-task">Waiting for visual assets</div>
+                        </div>
+                        <div class="status-dot"></div>
+                    </div>
+                    <div class="agent-row idle">
+                        <div class="agent-emoji">📤</div>
+                        <div class="agent-info">
+                            <div class="agent-name">PUBLISHER</div>
+                            <div class="agent-task">Waiting for content package</div>
+                        </div>
+                        <div class="status-dot"></div>
+                    </div>
+                    <div class="agent-row working">
+                        <div class="agent-emoji">🫡</div>
+                        <div class="agent-info">
+                            <div class="agent-name">JARVIS (PRODUCER)</div>
+                            <div class="agent-task">Coordinating pipeline, building office</div>
+                        </div>
+                        <div class="status-dot working"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats + Content -->
+            <div class="panel">
+                <div class="panel-title">📊 Statistics</div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">Posts Drafted</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Published</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Images</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number">0</div>
+                        <div class="stat-label">Videos</div>
+                    </div>
+                </div>
+                
+                <div class="panel-title" style="margin-top:15px">📦 Content Queue</div>
+                <div class="content-item in-progress">
+                    <div>
+                        <div class="content-title">Style Proposal</div>
+                        <div class="content-meta">3 варіанти стилю для апруву</div>
+                    </div>
+                    <span class="badge review">review</span>
+                </div>
+                <div class="content-item pending">
+                    <div>
+                        <div class="content-title">Post #001 — Анонс KARRAK</div>
+                        <div class="content-meta">Instagram + Facebook</div>
+                    </div>
+                    <span class="badge draft">draft</span>
+                </div>
+                <div class="content-item pending">
+                    <div>
+                        <div class="content-title">Post #002 — Збір на пікапи</div>
+                        <div class="content-meta">Instagram + Facebook</div>
+                    </div>
+                    <span class="badge draft">draft</span>
+                </div>
+                <div class="content-item pending">
+                    <div>
+                        <div class="content-title">Post #003 — Підземний дрон</div>
+                        <div class="content-meta">Карусель Instagram</div>
+                    </div>
+                    <span class="badge draft">draft</span>
+                </div>
+            </div>
+            
+            <!-- Activity Log -->
+            <div class="panel">
+                <div class="panel-title">📡 Activity Log</div>
+                <div class="log-list">
+                    <div class="log-entry">
+                        <span class="log-time">03:40</span>
+                        <span class="log-text">🔍 Scout: Deep analysis of 15+ military pages completed</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">03:35</span>
+                        <span class="log-text">📝 SMM: 3 style proposals generated (Tech Noir / Build in Public / AI Anime)</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">03:30</span>
+                        <span class="log-text">🔍 Scout: Analyzed 3 ОШБр marketing — anime campaign, pin-up, Hollywood style</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">03:25</span>
+                        <span class="log-text">🔍 Scout: Key insight — Taras Ishchyk (ZSU brand designer) interview analyzed</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">03:20</span>
+                        <span class="log-text">📝 SMM: Post drafts #001-003 created</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">03:10</span>
+                        <span class="log-text">🫡 Producer: Brand Bible created</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">03:05</span>
+                        <span class="log-text">🔍 Scout: First report — 10 content ideas generated</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">02:55</span>
+                        <span class="log-text">📋 Polozhennya KARRAK uploaded & analyzed</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">02:50</span>
+                        <span class="log-text">⛏ KARRAK MEDIA office initialized</span>
+                    </div>
+                    <div class="log-entry">
+                        <span class="log-time">02:48</span>
+                        <span class="log-text">🎙 Meeting transcript (62 min) processed via Groq Whisper</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="status-live">
+                <div class="live-dot"></div>
+                <span>SYSTEM ONLINE — Auto-refresh every 30s</span>
+            </div>
+            <div>KARRAK MEDIA Virtual Office v1.0 — Powered by Jarvis</div>
+            <div>Balance: $3.73 ATXP</div>
+        </div>
+    </div>
+    
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getUTCHours()).padStart(2, '0');
+            const m = String(now.getUTCMinutes()).padStart(2, '0');
+            const s = String(now.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('time').textContent = `${h}:${m}:${s}`;
+            
+            const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+            const d = now.getUTCDate();
+            const mo = months[now.getUTCMonth()];
+            const y = now.getUTCFullYear();
+            document.getElementById('date').textContent = `${d} ${mo} ${y} UTC`;
+        }
+        
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
